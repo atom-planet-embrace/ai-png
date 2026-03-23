@@ -71,7 +71,7 @@ jobs:
         run: sudo systemctl start docker
 
       - name: Cross-Run Tests in powerpc-unknown-linux-gnu using Qemu
-        run: cross test --release --target powerpc-unknown-linux-gnu --verbose -v
+        run: cross test --release --target powerpc-unknown-linux-gnu --verbose -v --features std
   test_all:
     strategy:
       matrix:
