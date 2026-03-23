@@ -2,7 +2,7 @@
 
 use libfuzzer_sys::fuzz_target;
 use std::io::Cursor;
-use png::{Filter, ColorType, BitDepth};
+use ai_png::{Filter, ColorType, BitDepth};
 
 fuzz_target!(|data: (u8, u8, u8, u8, u8, Vec<u8>, Vec<u8>)| {
     if let Some((raw, encoded)) = encode_png(data.0, data.1, data.2, data.3, data.4, &data.5, &data.6) {
@@ -34,9 +34,9 @@ fn encode_png<'a>(width: u8, filter: u8, compression: u8, color_type: u8, raw_bi
     }
     // compression
     let compression = match compression {
-        0 => png::DeflateCompression::NoCompression,
-        level @ 1..=9 => png::DeflateCompression::Level(level),
-        10 => png::DeflateCompression::FdeflateUltraFast,
+        0 => ai_png::DeflateCompression::NoCompression,
+        level @ 1..=9 => ai_png::DeflateCompression::Level(level),
+        10 => ai_png::DeflateCompression::FdeflateUltraFast,
         _ => return None,
     };
 
@@ -51,7 +51,7 @@ fn encode_png<'a>(width: u8, filter: u8, compression: u8, color_type: u8, raw_bi
     // perform the PNG encoding
     let mut output: Vec<u8> = Vec::new();
     { // scoped so that we could return the Vec
-        let mut encoder = png::Encoder::new(&mut output, width, height as u32);
+        let mut encoder = ai_png::Encoder::new(&mut output, width, height as u32);
         encoder.set_depth(bit_depth);
         encoder.set_color(color_type);
         encoder.set_filter(filter);
@@ -67,8 +67,8 @@ fn encode_png<'a>(width: u8, filter: u8, compression: u8, color_type: u8, raw_bi
     Some((data_to_encode, output))
 }
 
-fn decode_png(data: &[u8]) -> (png::OutputInfo, Vec<u8>) {
-    let decoder = png::Decoder::new(Cursor::new(data));
+fn decode_png(data: &[u8]) -> (ai_png::OutputInfo, Vec<u8>) {
+    let decoder = ai_png::Decoder::new(Cursor::new(data));
     let  mut reader = decoder.read_info().unwrap();
 
     let mut img_data = vec![0u8; reader.info().raw_bytes()];

@@ -1,15 +1,15 @@
 [package]
-name = "png"
+name = "ai-png"
 version = "0.18.1"
 license = "MIT OR Apache-2.0"
 
-description = "PNG decoding and encoding library in pure Rust"
+description = "A no_std port of png"
 categories = ["multimedia::images"]
 authors = ["The image-rs Developers"]
-repository = "https://github.com/image-rs/image-png"
+repository = "https://github.com/atom-planet-embrace/ai-png"
 
 edition = "2021"
-rust-version = "1.73"
+rust-version = "1.81"
 include = [
     "/LICENSE-MIT",
     "/LICENSE-APACHE",
@@ -22,10 +22,11 @@ include = [
 
 [dependencies]
 bitflags = "2.0"
-crc32fast = "1.2.0"
-fdeflate = "0.3.3"
-flate2 = "1.0.35"
-miniz_oxide = { version = "0.8", features = ["simd"] }
+crc32fast = { version = "1.5.0", default-features = false }
+fdeflate = { package = "ai-fdeflate", version = "0.3.7" }
+flate2 = { package = "ai-flate2", version = "1.1.9" }
+no_std_io = { version = "0.6", default-features = false, features = ["alloc"] }
+miniz_oxide = { version = "0.8", default-features = false }
 
 [dev-dependencies]
 approx = "0.5.1"
@@ -38,6 +39,9 @@ rand = "0.9.2"
 criterion = "0.7.0"
 
 [features]
+default = []
+std = ["fdeflate/std", "flate2/std", "crc32fast/std", "no_std_io/std"]
+simd = ["miniz_oxide/simd", "crc32fast/std"]
 # Use nightly-only features for a minor performance boost in PNG decoding
 unstable = ["crc32fast/nightly"]
 # Use zlib-rs for faster PNG encoding at the cost of some `unsafe` code.
@@ -48,6 +52,22 @@ unstable = ["crc32fast/nightly"]
 zlib-rs = ["flate2/zlib-rs"]
 benchmarks = []
 
+[[example]]
+name = "corpus-bench"
+required-features = ["std"]
+
+[[example]]
+name = "png-generate"
+required-features = ["std"]
+
+[[example]]
+name = "change-png-info"
+required-features = ["std"]
+
+[[example]]
+name = "pngcheck"
+required-features = ["std"]
+
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(fuzzing)'] }
 
@@ -55,21 +75,22 @@ unexpected_cfgs = { level = "warn", check-cfg = ['cfg(fuzzing)'] }
 path = "benches/decoder.rs"
 name = "decoder"
 harness = false
+required-features = ["std"]
 
 [[bench]]
 path = "benches/unfilter.rs"
 name = "unfilter"
 harness = false
-required-features = ["benchmarks"]
+required-features = ["std", "benchmarks"]
 
 [[bench]]
 path = "benches/adam7.rs"
 name = "adam7"
 harness = false
-required-features = ["benchmarks"]
+required-features = ["std", "benchmarks"]
 
 [[bench]]
 path = "benches/expand_paletted.rs"
 name = "expand_paletted"
 harness = false
-required-features = ["benchmarks"]
+required-features = ["std", "benchmarks"]

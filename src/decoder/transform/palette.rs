@@ -18,6 +18,7 @@
 
 use super::{unpack_bits, TransformFn};
 use crate::{BitDepth, Info};
+use alloc::boxed::Box;
 
 pub fn create_expansion_into_rgb8(info: &Info) -> TransformFn {
     let rgba_palette = create_rgba_palette(info);

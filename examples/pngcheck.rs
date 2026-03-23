@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 
 use clap::Parser;
 
-use png::chunk;
+use ai_png::chunk;
 
 #[derive(Parser)]
 #[command(about, version)]
@@ -32,8 +32,8 @@ fn display_interlaced(i: bool) -> &'static str {
     }
 }
 
-fn display_image_type(bits: u8, color: png::ColorType) -> String {
-    use png::ColorType::*;
+fn display_image_type(bits: u8, color: ai_png::ColorType) -> String {
+    use ai_png::ColorType::*;
     format!(
         "{}-bit {}",
         bits,
@@ -47,8 +47,8 @@ fn display_image_type(bits: u8, color: png::ColorType) -> String {
     )
 }
 // channels after expansion of tRNS
-fn final_channels(c: png::ColorType, trns: bool) -> u8 {
-    use png::ColorType::*;
+fn final_channels(c: ai_png::ColorType, trns: bool) -> u8 {
+    use ai_png::ColorType::*;
     match c {
         Grayscale => 1 + u8::from(trns),
         Rgb => 3,
@@ -60,18 +60,18 @@ fn final_channels(c: png::ColorType, trns: bool) -> u8 {
 
 fn check_image<P: AsRef<Path>>(c: &Config, fname: P) -> io::Result<()> {
     // TODO improve performance by reusing allocations from decoder
-    use png::Decoded::*;
+    use ai_png::Decoded::*;
     let data = &mut vec![0; 10 * 1024][..];
     let mut reader = io::BufReader::new(File::open(&fname)?);
     let fname = fname.as_ref().to_string_lossy();
     let n = reader.read(data)?;
     let mut buf = &data[..n];
     let mut pos = 0;
-    let mut decoder = png::StreamingDecoder::new();
+    let mut decoder = ai_png::StreamingDecoder::new();
     // Image data
     let mut width = 0;
     let mut height = 0;
-    let mut color = png::ColorType::Grayscale;
+    let mut color = ai_png::ColorType::Grayscale;
     let mut bits = 0;
     let mut trns = false;
     let mut interlaced = false;
@@ -124,7 +124,7 @@ fn check_image<P: AsRef<Path>>(c: &Config, fname: P) -> io::Result<()> {
             Ok((_, ChunkComplete(chunk::IEND))) => {
                 if !have_idat {
                     // This isn't beautiful. But it works.
-                    display_error(png::DecodingError::IoError(io::Error::new(
+                    display_error(ai_png::DecodingError::IoError(io::Error::new(
                         io::ErrorKind::InvalidData,
                         "IDAT chunk missing",
                     )))?;

@@ -29,7 +29,7 @@
 //!  use std::path::PathBuf;
 //!
 //!  // Opening a png file that has a zTXt chunk
-//!  let decoder = png::Decoder::new(
+//!  let decoder = ai_png::Decoder::new(
 //!      BufReader::new(File::open("tests/text_chunk_examples/ztxt_example.png").unwrap())
 //!  );
 //!  let mut reader = decoder.read_info().unwrap();
@@ -48,7 +48,7 @@
 //!  To add a text chunk at any point in the stream, use the `write_text_chunk` method.
 //!
 //!  ```
-//!  # use png::text_metadata::{ITXtChunk, ZTXtChunk};
+//!  # use ai_png::text_metadata::{ITXtChunk, ZTXtChunk};
 //!  # use std::env;
 //!  # use std::fs::File;
 //!  # use std::io::BufWriter;
@@ -56,9 +56,9 @@
 //!  # use std::path::PathBuf;
 //!  # let file = File::create(PathBuf::from_iter(["target", "text_chunk.png"])).unwrap();
 //!  # let ref mut w = BufWriter::new(file);
-//!  let mut encoder = png::Encoder::new(w, 2, 1); // Width is 2 pixels and height is 1.
-//!  encoder.set_color(png::ColorType::Rgba);
-//!  encoder.set_depth(png::BitDepth::Eight);
+//!  let mut encoder = ai_png::Encoder::new(w, 2, 1); // Width is 2 pixels and height is 1.
+//!  encoder.set_color(ai_png::ColorType::Rgba);
+//!  encoder.set_depth(ai_png::BitDepth::Eight);
 //!  // Adding text chunks to the header
 //!  encoder
 //!     .add_text_chunk(
@@ -98,11 +98,15 @@
 
 #![warn(missing_docs)]
 
+use crate::io::Write;
 use crate::{chunk, encoder, DecodingError, EncodingError};
+use alloc::borrow::ToOwned;
+use alloc::string::{String, ToString};
+use alloc::vec::Vec;
+use core::convert::TryFrom;
 use fdeflate::BoundedDecompressionError;
 use flate2::write::ZlibEncoder;
 use flate2::Compression;
-use std::{convert::TryFrom, io::Write};
 
 /// Default decompression limit for compressed text chunks.
 pub const DECOMPRESSION_LIMIT: usize = 2097152; // 2 MiB
@@ -178,7 +182,7 @@ fn decode_ascii(text: &[u8]) -> Result<&str, TextDecodingError> {
     if text.is_ascii() {
         // `from_utf8` cannot panic because we're already checked that `text` is ASCII-7.
         // And this is the only safe way to get ASCII-7 string from `&[u8]`.
-        Ok(std::str::from_utf8(text).expect("unreachable"))
+        Ok(core::str::from_utf8(text).expect("unreachable"))
     } else {
         Err(TextDecodingError::Unrepresentable)
     }
@@ -423,7 +427,7 @@ impl ITXtChunk {
 
         let language_tag = decode_ascii(language_tag_slice)?.to_owned();
 
-        let translated_keyword = std::str::from_utf8(translated_keyword_slice)
+        let translated_keyword = core::str::from_utf8(translated_keyword_slice)
             .map_err(|_| TextDecodingError::Unrepresentable)?
             .to_string();
         let text = if compressed {

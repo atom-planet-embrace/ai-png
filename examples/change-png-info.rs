@@ -4,7 +4,7 @@ use std::fs::File;
 use std::io::{BufReader, BufWriter};
 use std::path::Path;
 
-use png::DecodingError::LimitsExceeded;
+use ai_png::DecodingError::LimitsExceeded;
 pub type BoxResult<T> = Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 fn main() -> BoxResult<()> {
@@ -13,7 +13,7 @@ fn main() -> BoxResult<()> {
     let path_in = Path::new(r"./tests/pngsuite/basi0g01.png");
     // The decoder is a build for reader and can be used to set various decoding options
     // via `Transformations`. The default output transformation is `Transformations::IDENTITY`.
-    let decoder = png::Decoder::new(BufReader::new(File::open(path_in)?));
+    let decoder = ai_png::Decoder::new(BufReader::new(File::open(path_in)?));
     let mut reader = decoder.read_info()?;
     // Allocate the output buffer.
     let png_info = reader.info();
@@ -27,11 +27,11 @@ fn main() -> BoxResult<()> {
 
     // Get defaults for interlaced parameter.
     let mut info_out = png_info.clone();
-    let info_default = png::Info::default();
+    let info_default = ai_png::Info::default();
 
     // Edit previous info
     info_out.interlaced = info_default.interlaced;
-    let mut encoder = png::Encoder::with_info(w, info_out)?;
+    let mut encoder = ai_png::Encoder::with_info(w, info_out)?;
     encoder.set_depth(png_info.bit_depth);
 
     // Edit some attribute

@@ -4,10 +4,10 @@ use libfuzzer_sys::fuzz_target;
 use std::io::Cursor;
 
 #[inline(always)]
-fn png_decode(data: &[u8]) -> Result<(Option<png::OutputInfo>, Vec<u8>), ()> {
-    let limits = png::Limits { bytes: 1 << 16 };
-    let decoder = png::Decoder::new_with_limits(Cursor::new(data), limits);
-    let  mut reader = decoder.read_info().map_err(|_| ())?;
+fn png_decode(data: &[u8]) -> Result<(Option<ai_png::OutputInfo>, Vec<u8>), ()> {
+    let limits = ai_png::Limits { bytes: 1 << 16 };
+    let decoder = ai_png::Decoder::new_with_limits(Cursor::new(data), limits);
+    let mut reader = decoder.read_info().map_err(|_| ())?;
 
     if reader.info().raw_bytes() > 5_000_000 {
         return Err(());

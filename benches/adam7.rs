@@ -6,8 +6,8 @@
 //! ... tweak something, say the expansion of 8-bit ...
 //! $ bench --bench=expand_adam7 --features=benchmarks -- bpp=8 --baseline my_baseline
 //! ```
+use ai_png::benchable_apis::adam7;
 use criterion::{criterion_group, criterion_main, Criterion, Throughput};
-use png::benchable_apis::adam7;
 
 fn expand_all(c: &mut Criterion) {
     let expand_bpp = [1, 2, 4, 8, 16, 24, 32];

@@ -1,7 +1,7 @@
 use std::{fs, io::Cursor, path::PathBuf};
 
+use ai_png::Decoder;
 use clap::Parser;
-use png::Decoder;
 
 #[derive(clap::ValueEnum, Clone)]
 enum Speed {
@@ -33,26 +33,26 @@ struct Args {
 fn run_encode(
     args: &Args,
     dimensions: (u32, u32),
-    color_type: png::ColorType,
-    bit_depth: png::BitDepth,
+    color_type: ai_png::ColorType,
+    bit_depth: ai_png::BitDepth,
     image: &[u8],
 ) -> Vec<u8> {
     let mut reencoded = Vec::new();
-    let mut encoder = png::Encoder::new(&mut reencoded, dimensions.0, dimensions.1);
+    let mut encoder = ai_png::Encoder::new(&mut reencoded, dimensions.0, dimensions.1);
     encoder.set_color(color_type);
     encoder.set_depth(bit_depth);
     encoder.set_compression(match args.speed {
-        Speed::Fast => png::Compression::Fast,
-        Speed::Default => png::Compression::Balanced,
-        Speed::Best => png::Compression::High,
+        Speed::Fast => ai_png::Compression::Fast,
+        Speed::Default => ai_png::Compression::Balanced,
+        Speed::Best => ai_png::Compression::High,
     });
     encoder.set_filter(match args.filter {
-        Filter::None => png::Filter::NoFilter,
-        Filter::Sub => png::Filter::Sub,
-        Filter::Up => png::Filter::Up,
-        Filter::Average => png::Filter::Avg,
-        Filter::Paeth => png::Filter::Paeth,
-        Filter::Adaptive => png::Filter::Adaptive,
+        Filter::None => ai_png::Filter::NoFilter,
+        Filter::Sub => ai_png::Filter::Sub,
+        Filter::Up => ai_png::Filter::Up,
+        Filter::Average => ai_png::Filter::Avg,
+        Filter::Paeth => ai_png::Filter::Paeth,
+        Filter::Adaptive => ai_png::Filter::Adaptive,
     });
     let mut encoder = encoder.write_header().unwrap();
     encoder.write_image_data(image).unwrap();
@@ -109,10 +109,10 @@ fn main() {
             let data = fs::read(entry.path()).unwrap();
             let mut decoder = Decoder::new(Cursor::new(&*data));
             if decoder.read_header_info().ok().map(|h| h.color_type)
-                == Some(png::ColorType::Indexed)
+                == Some(ai_png::ColorType::Indexed)
             {
                 decoder.set_transformations(
-                    png::Transformations::EXPAND | png::Transformations::STRIP_16,
+                    ai_png::Transformations::EXPAND | ai_png::Transformations::STRIP_16,
                 );
             }
             let mut reader = match decoder.read_info() {
@@ -129,16 +129,16 @@ fn main() {
             let mut color_type = info.color_type;
 
             // qoibench expands grayscale to RGB, so we do the same.
-            if bit_depth == png::BitDepth::Eight {
-                if color_type == png::ColorType::Grayscale {
+            if bit_depth == ai_png::BitDepth::Eight {
+                if color_type == ai_png::ColorType::Grayscale {
                     image = image.into_iter().flat_map(|v| [v, v, v, 255]).collect();
-                    color_type = png::ColorType::Rgba;
-                } else if color_type == png::ColorType::GrayscaleAlpha {
+                    color_type = ai_png::ColorType::Rgba;
+                } else if color_type == ai_png::ColorType::GrayscaleAlpha {
                     image = image
                         .chunks_exact(2)
                         .flat_map(|v| [v[0], v[0], v[0], v[1]])
                         .collect();
-                    color_type = png::ColorType::Rgba;
+                    color_type = ai_png::ColorType::Rgba;
                 }
             }
 

@@ -1,8 +1,12 @@
-use std::convert::TryInto;
-use std::error;
-use std::fmt;
-use std::io;
-use std::{borrow::Cow, cmp::min};
+use crate::io;
+use alloc::borrow::Cow;
+#[cfg(feature = "std")]
+use alloc::string::ToString;
+use alloc::vec::Vec;
+use core::cmp::min;
+use core::convert::TryInto;
+use core::error;
+use core::fmt;
 
 use crc32fast::Hasher as Crc32;
 
@@ -119,7 +123,7 @@ pub enum DecodingError {
     ///
     /// Note that some IO errors may be recoverable - decoding may be retried after the
     /// error is resolved.  For example, decoding from a slow stream of data (e.g. decoding from a
-    /// network stream) may occasionally result in [std::io::ErrorKind::UnexpectedEof] kind of
+    /// network stream) may occasionally result in [io::ErrorKind::UnexpectedEof] kind of
     /// error, but decoding can resume when more data becomes available.
     IoError(io::Error),
     /// The input image was not a valid PNG.
@@ -284,6 +288,7 @@ pub(crate) enum FormatErrorInner {
 impl error::Error for DecodingError {
     fn cause(&self) -> Option<&(dyn error::Error + 'static)> {
         match self {
+            #[cfg(feature = "std")]
             DecodingError::IoError(err) => Some(err),
             _ => None,
         }
@@ -448,7 +453,10 @@ impl From<DecodingError> for io::Error {
     fn from(err: DecodingError) -> io::Error {
         match err {
             DecodingError::IoError(err) => err,
-            err => io::Error::new(io::ErrorKind::Other, err.to_string()),
+            #[cfg(feature = "std")]
+            _err => io::Error::new(io::ErrorKind::Other, _err.to_string()),
+            #[cfg(not(feature = "std"))]
+            _ => io::Error::new(io::ErrorKind::Other, "decoding error"),
         }
     }
 }
@@ -806,7 +814,7 @@ impl StreamingDecoder {
             }
             ImageData(type_str) => {
                 debug_assert!(type_str == IDAT || type_str == chunk::fdAT);
-                let len = std::cmp::min(buf.len(), self.current_chunk.remaining as usize);
+                let len = core::cmp::min(buf.len(), self.current_chunk.remaining as usize);
                 let buf = &buf[..len];
 
                 let consumed = if let Some(image_data) = image_data {
@@ -1137,7 +1145,7 @@ impl StreamingDecoder {
                 // `UnexpectedEof` from something like `read_be` is permanent and indicates an
                 // invalid PNG that should be represented as a `FormatError`, rather than as a
                 // (potentially recoverable) `IoError` / `UnexpectedEof`.
-                DecodingError::IoError(e) if e.kind() == std::io::ErrorKind::UnexpectedEof => {
+                DecodingError::IoError(e) if e.kind() == io::ErrorKind::UnexpectedEof => {
                     let fmt_err: FormatError =
                         FormatErrorInner::ChunkLengthWrong { kind: type_str }.into();
                     fmt_err.into()
@@ -1557,9 +1565,7 @@ impl StreamingDecoder {
                 0 => false,
                 1 => true,
                 _ => {
-                    return Err(DecodingError::IoError(
-                        std::io::ErrorKind::InvalidData.into(),
-                    ));
+                    return Err(DecodingError::IoError(io::ErrorKind::InvalidData.into()));
                 }
             }
         };
@@ -1567,15 +1573,11 @@ impl StreamingDecoder {
         // RGB is currently the only supported color model in PNG, and as
         // such Matrix Coefficients shall be set to 0.
         if matrix_coefficients != 0 {
-            return Err(DecodingError::IoError(
-                std::io::ErrorKind::InvalidData.into(),
-            ));
+            return Err(DecodingError::IoError(io::ErrorKind::InvalidData.into()));
         }
 
         if !buf.is_empty() {
-            return Err(DecodingError::IoError(
-                std::io::ErrorKind::InvalidData.into(),
-            ));
+            return Err(DecodingError::IoError(io::ErrorKind::InvalidData.into()));
         }
 
         info.coding_independent_code_points = Some(CodingIndependentCodePoints {
@@ -1633,9 +1635,7 @@ impl StreamingDecoder {
         let max_luminance: u32 = buf.read_be()?;
         let min_luminance: u32 = buf.read_be()?;
         if !buf.is_empty() {
-            return Err(DecodingError::IoError(
-                std::io::ErrorKind::InvalidData.into(),
-            ));
+            return Err(DecodingError::IoError(io::ErrorKind::InvalidData.into()));
         }
         info.mastering_display_color_volume = Some(MasteringDisplayColorVolume {
             chromaticities,
@@ -1658,9 +1658,7 @@ impl StreamingDecoder {
         let max_content_light_level: u32 = buf.read_be()?;
         let max_frame_average_light_level: u32 = buf.read_be()?;
         if !buf.is_empty() {
-            return Err(DecodingError::IoError(
-                std::io::ErrorKind::InvalidData.into(),
-            ));
+            return Err(DecodingError::IoError(io::ErrorKind::InvalidData.into()));
         }
         info.content_light_level = Some(ContentLightLevelInfo {
             max_content_light_level,
@@ -1937,9 +1935,7 @@ impl StreamingDecoder {
         let expected = match info.color_type {
             ColorType::Indexed => {
                 if info.palette.is_none() {
-                    return Err(DecodingError::IoError(
-                        std::io::ErrorKind::InvalidData.into(),
-                    ));
+                    return Err(DecodingError::IoError(io::ErrorKind::InvalidData.into()));
                 };
                 1
             }

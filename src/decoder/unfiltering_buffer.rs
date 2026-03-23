@@ -3,6 +3,7 @@ use super::zlib::UnfilterBuf;
 use crate::common::BytesPerPixel;
 use crate::filter::{unfilter, RowFilter};
 use crate::Info;
+use alloc::vec::Vec;
 
 // Buffer for temporarily holding decompressed, not-yet-`unfilter`-ed rows.
 pub(crate) struct UnfilteringBuffer {
@@ -110,7 +111,7 @@ impl UnfilteringBuffer {
         // Stash a previously allocated buffer (for potential reuse later)
         // rather than throwing it away when resetting `self.prev_row`.
         if let PrevRow::Scratch(buf) = &mut self.prev_row {
-            self.scratch_buffer = std::mem::take(buf);
+            self.scratch_buffer = core::mem::take(buf);
         }
 
         self.prev_row = PrevRow::None;
@@ -302,7 +303,7 @@ impl UnfilteringBuffer {
 
         let filter = self.curr_row_filter()?;
 
-        let mut row = std::mem::take(&mut self.scratch_buffer);
+        let mut row = core::mem::take(&mut self.scratch_buffer);
         row.resize(rowlen - 1, 0);
         row.as_mut_slice()
             .copy_from_slice(&self.data_stream[self.current_start + 1..][..rowlen - 1]);

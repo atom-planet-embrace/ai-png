@@ -1,4 +1,6 @@
 use super::{stream::FormatErrorInner, unfiltering_buffer::UnfilteringBuffer, DecodingError};
+use alloc::boxed::Box;
+use alloc::vec::Vec;
 
 use fdeflate::Decompressor;
 
@@ -157,7 +159,6 @@ impl ZlibStream {
                 &[],
                 &mut image_data.buffer[*image_data.available..],
                 *image_data.filled - *image_data.available,
-                false,
             )
             .map_err(|err| {
                 DecodingError::Format(FormatErrorInner::CorruptFlateStream { err }.into())
@@ -228,7 +229,6 @@ impl UnfilterBuf<'_> {
                 input,
                 &mut self.buffer[*self.available..output_limit],
                 *self.filled - *self.available,
-                false,
             )
             .map_err(|err| {
                 DecodingError::Format(FormatErrorInner::CorruptFlateStream { err }.into())

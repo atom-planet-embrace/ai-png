@@ -1,8 +1,10 @@
+This is a fork of the [png](https://crates.io/crates/png) crate.
+
 # PNG Decoder/Encoder
-[![Build Status](https://github.com/image-rs/image-png/workflows/Rust%20CI/badge.svg)](https://github.com/image-rs/image-png/actions)
-[![Documentation](https://docs.rs/png/badge.svg)](https://docs.rs/png)
-[![Crates.io](https://img.shields.io/crates/v/png.svg)](https://crates.io/crates/png)
-[![License](https://img.shields.io/crates/l/png.svg)](https://github.com/image-rs/image-png)
+[![Build Status](https://github.com/atom-planet-embrace/ai-png/workflows/Rust%20CI/badge.svg)](https://github.com/atom-planet-embrace/ai-image/actions)
+[![Documentation](https://docs.rs/ai-png/badge.svg)](https://docs.rs/ai-png)
+[![Crates.io](https://img.shields.io/crates/v/ai-png.svg)](https://crates.io/crates/ai-png)
+[![License](https://img.shields.io/crates/l/ai-png.svg)](https://github.com/atom-planet-embrace/ai-png)
 
 Robust and performant PNG decoder/encoder in pure Rust. Also supports [APNG](https://en.wikipedia.org/wiki/APNG).
 

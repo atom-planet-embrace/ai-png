@@ -12,7 +12,7 @@ const APNG_SUITES: [&str; 1] = ["animated"];
 
 fn process_images<F>(results_path: &str, test_suites: &[&str], func: F)
 where
-    F: Fn(PathBuf) -> Result<u32, png::DecodingError>,
+    F: Fn(PathBuf) -> Result<u32, ai_png::DecodingError>,
 {
     let base: PathBuf = BASE_PATH.iter().collect();
     let mut results = BTreeMap::new();
@@ -94,8 +94,8 @@ where
 #[test]
 fn render_images() {
     process_images("results.txt", &TEST_SUITES, |path| {
-        let mut decoder = png::Decoder::new(BufReader::new(File::open(path)?));
-        decoder.set_transformations(png::Transformations::normalize_to_color8());
+        let mut decoder = ai_png::Decoder::new(BufReader::new(File::open(path)?));
+        decoder.set_transformations(ai_png::Transformations::normalize_to_color8());
         let mut reader = decoder.read_info()?;
         let mut img_data = vec![0; reader.output_buffer_size().unwrap()];
         let info = reader.next_frame(&mut img_data)?;
@@ -117,7 +117,7 @@ fn render_images() {
 #[test]
 fn render_images_identity() {
     process_images("results_identity.txt", &TEST_SUITES, |path| {
-        let decoder = png::Decoder::new(BufReader::new(File::open(&path)?));
+        let decoder = ai_png::Decoder::new(BufReader::new(File::open(&path)?));
         let mut reader = decoder.read_info()?;
         let mut img_data = vec![0; reader.output_buffer_size().unwrap()];
         let info = reader.next_frame(&mut img_data)?;
@@ -142,8 +142,8 @@ fn render_images_identity() {
 #[test]
 fn render_images_alpha() {
     process_images("results_alpha.txt", &TEST_SUITES, |path| {
-        let mut decoder = png::Decoder::new(BufReader::new(File::open(&path)?));
-        decoder.set_transformations(png::Transformations::ALPHA);
+        let mut decoder = ai_png::Decoder::new(BufReader::new(File::open(&path)?));
+        decoder.set_transformations(ai_png::Transformations::ALPHA);
         let mut reader = decoder.read_info()?;
         let mut img_data = vec![0; reader.output_buffer_size().unwrap()];
         let info = reader.next_frame(&mut img_data)?;
@@ -183,8 +183,8 @@ fn apng_images() {
             count
         };
 
-        let mut decoder = png::Decoder::new(BufReader::new(File::open(&path)?));
-        decoder.set_transformations(png::Transformations::normalize_to_color8());
+        let mut decoder = ai_png::Decoder::new(BufReader::new(File::open(&path)?));
+        decoder.set_transformations(ai_png::Transformations::normalize_to_color8());
         let mut reader = decoder.read_info()?;
         let mut img_data = vec![0; reader.output_buffer_size().unwrap()];
         let real_frames = reader.info().animation_control().unwrap().num_frames;

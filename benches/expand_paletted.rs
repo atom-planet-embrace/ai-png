@@ -7,9 +7,11 @@
 //! $ bench --bench=expand_paletted --features=benchmarks -- --baseline my_baseline
 //! ```
 
+use ai_png::benchable_apis::{
+    create_info_from_plte_trns_bitdepth, create_transform_fn, TransformFn,
+};
+use ai_png::{Info, Transformations};
 use criterion::{criterion_group, criterion_main, Criterion, Throughput};
-use png::benchable_apis::{create_info_from_plte_trns_bitdepth, create_transform_fn, TransformFn};
-use png::{Info, Transformations};
 use rand::Rng;
 use std::fmt::{self, Display};
 

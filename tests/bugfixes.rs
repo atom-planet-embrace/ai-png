@@ -1,6 +1,6 @@
 use std::{fs::File, io::BufReader};
 
-use png::{DecodeOptions, Decoder, DecodingError};
+use ai_png::{DecodeOptions, Decoder, DecodingError};
 
 #[test]
 fn issue_430() {

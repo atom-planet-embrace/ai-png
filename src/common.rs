@@ -1,10 +1,13 @@
 //! Common types shared between the encoder and decoder
+use crate::io;
 use crate::text_metadata::{ITXtChunk, TEXtChunk, ZTXtChunk};
 #[allow(unused_imports)] // used by doc comments only
 use crate::Filter;
 use crate::{chunk, encoder};
+use alloc::borrow::Cow;
+use alloc::vec::Vec;
+use core::{convert::TryFrom, fmt};
 use io::Write;
-use std::{borrow::Cow, convert::TryFrom, fmt, io};
 
 /// Describes how a pixel is encoded.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -427,9 +430,19 @@ pub struct ScaledFloat(u32);
 impl ScaledFloat {
     pub const SCALING: f32 = 100_000.0;
 
+    /// no_std-compatible floor for f32.
+    fn floor(v: f32) -> f32 {
+        let i = v as i64 as f32;
+        if v < i {
+            i - 1.0
+        } else {
+            i
+        }
+    }
+
     /// Gets whether the value is within the clamped range of this type.
     pub fn in_range(value: f32) -> bool {
-        value >= 0.0 && (value * Self::SCALING).floor() <= u32::MAX as f32
+        value >= 0.0 && Self::floor(value * Self::SCALING) <= u32::MAX as f32
     }
 
     /// Gets whether the value can be exactly converted in round-trip.
@@ -441,7 +454,7 @@ impl ScaledFloat {
     }
 
     fn forward(value: f32) -> u32 {
-        (value.max(0.0) * Self::SCALING).floor() as u32
+        Self::floor(value.max(0.0) * Self::SCALING) as u32
     }
 
     fn reverse(encoded: u32) -> f32 {
@@ -966,6 +979,63 @@ impl fmt::Display for ParameterError {
             PolledAfterFatalError => {
                 write!(fmt, "A fatal decoding error has been encounted earlier")
             }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::ScaledFloat;
+
+    #[test]
+    fn floor_positive_integers() {
+        assert_eq!(ScaledFloat::floor(0.0), 0.0);
+        assert_eq!(ScaledFloat::floor(1.0), 1.0);
+        assert_eq!(ScaledFloat::floor(100.0), 100.0);
+    }
+
+    #[test]
+    fn floor_positive_fractions() {
+        assert_eq!(ScaledFloat::floor(1.5), 1.0);
+        assert_eq!(ScaledFloat::floor(2.9), 2.0);
+        assert_eq!(ScaledFloat::floor(0.1), 0.0);
+        assert_eq!(ScaledFloat::floor(0.999), 0.0);
+    }
+
+    #[test]
+    fn floor_negative_integers() {
+        assert_eq!(ScaledFloat::floor(-1.0), -1.0);
+        assert_eq!(ScaledFloat::floor(-2.0), -2.0);
+    }
+
+    #[test]
+    fn floor_negative_fractions() {
+        assert_eq!(ScaledFloat::floor(-0.1), -1.0);
+        assert_eq!(ScaledFloat::floor(-1.5), -2.0);
+        assert_eq!(ScaledFloat::floor(-2.9), -3.0);
+    }
+
+    #[test]
+    fn floor_matches_std_floor() {
+        let values = [
+            0.0,
+            0.5,
+            1.0,
+            1.1,
+            1.9,
+            2.0,
+            100.7,
+            -0.1,
+            -0.5,
+            -1.0,
+            -1.1,
+            -1.9,
+            -2.0,
+            -100.7,
+            42455.0 / 100000.0, // 1.0 / 2.2 scaled — used in ScaledFloat::new
+        ];
+        for v in values {
+            assert_eq!(ScaledFloat::floor(v), v.floor(), "floor({v}) mismatch");
         }
     }
 }

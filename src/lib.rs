@@ -15,7 +15,7 @@
 //! use std::io::BufReader;
 //! // The decoder is a build for reader and can be used to set various decoding options
 //! // via `Transformations`. The default output transformation is `Transformations::IDENTITY`.
-//! let decoder = png::Decoder::new(BufReader::new(File::open("tests/pngsuite/basi0g01.png").unwrap()));
+//! let decoder = ai_png::Decoder::new(BufReader::new(File::open("tests/pngsuite/basi0g01.png").unwrap()));
 //! let mut reader = decoder.read_info().unwrap();
 //! // Allocate the output buffer.
 //! let mut buf = vec![0; reader.output_buffer_size().unwrap()];
@@ -40,12 +40,12 @@
 //! let file = File::create(path).unwrap();
 //! let ref mut w = BufWriter::new(file);
 //!
-//! let mut encoder = png::Encoder::new(w, 2, 1); // Width is 2 pixels and height is 1.
-//! encoder.set_color(png::ColorType::Rgba);
-//! encoder.set_depth(png::BitDepth::Eight);
-//! encoder.set_source_gamma(png::ScaledFloat::from_scaled(45455)); // 1.0 / 2.2, scaled by 100000
-//! encoder.set_source_gamma(png::ScaledFloat::new(1.0 / 2.2));     // 1.0 / 2.2, unscaled, but rounded
-//! let source_chromaticities = png::SourceChromaticities::new(     // Using unscaled instantiation here
+//! let mut encoder = ai_png::Encoder::new(w, 2, 1); // Width is 2 pixels and height is 1.
+//! encoder.set_color(ai_png::ColorType::Rgba);
+//! encoder.set_depth(ai_png::BitDepth::Eight);
+//! encoder.set_source_gamma(ai_png::ScaledFloat::from_scaled(45455)); // 1.0 / 2.2, scaled by 100000
+//! encoder.set_source_gamma(ai_png::ScaledFloat::new(1.0 / 2.2));     // 1.0 / 2.2, unscaled, but rounded
+//! let source_chromaticities = ai_png::SourceChromaticities::new(     // Using unscaled instantiation here
 //!     (0.31270, 0.32900),
 //!     (0.64000, 0.33000),
 //!     (0.30000, 0.60000),
@@ -59,6 +59,7 @@
 //! ```
 //!
 
+#![cfg_attr(not(feature = "std"), no_std)]
 #![forbid(unsafe_code)]
 // Silence certain clippy warnings until our MSRV is higher.
 //
@@ -68,12 +69,20 @@
 #![allow(clippy::uninlined_format_args)]
 #![cfg_attr(feature = "unstable", feature(portable_simd))]
 
+extern crate alloc;
+
+#[cfg(not(feature = "std"))]
+pub(crate) use no_std_io::io;
+#[cfg(feature = "std")]
+pub(crate) use std::io;
+
 mod adam7;
 pub mod chunk;
 mod common;
 mod decoder;
 mod encoder;
 mod filter;
+mod io_ext;
 mod srgb;
 pub mod text_metadata;
 mod traits;

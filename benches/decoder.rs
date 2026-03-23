@@ -1,9 +1,9 @@
 use std::{fs, io::Cursor};
 
+use ai_png::{Decoder, Reader, Transformations};
 use criterion::{
     criterion_group, criterion_main, measurement::WallTime, BenchmarkGroup, Criterion, Throughput,
 };
-use png::{Decoder, Reader, Transformations};
 
 #[path = "../src/test_utils.rs"]
 mod test_utils;
@@ -99,7 +99,7 @@ fn create_reader(data: &[u8]) -> Reader<Cursor<&[u8]>> {
     let mut decoder = Decoder::new(Cursor::new(data));
 
     // Cover default transformations used by the `image` crate when constructing
-    // `image::codecs::png::PngDecoder`.
+    // `image::codecs::ai_png::PngDecoder`.
     decoder.set_transformations(Transformations::EXPAND);
 
     decoder.read_info().unwrap()

@@ -7,9 +7,9 @@
 //! $ bench --bench=unfilter --features=benchmarks -- filter=Sub --baseline my_baseline
 //! ```
 
+use ai_png::benchable_apis::unfilter;
+use ai_png::Filter;
 use criterion::{criterion_group, criterion_main, Criterion, Throughput};
-use png::benchable_apis::unfilter;
-use png::Filter;
 use rand::Rng;
 
 fn unfilter_all(c: &mut Criterion) {

@@ -196,8 +196,8 @@ fn test_data<'a>(data: &'a [u8]) -> Result<(), ()> {
         .into_iter()
         .map(|data_reader| {
             // Small limits, we don't need them hopefully.
-            let limits = png::Limits { bytes: 1 << 16 };
-            png::Decoder::new_with_limits(data_reader, limits)
+            let limits = ai_png::Limits { bytes: 1 << 16 };
+            ai_png::Decoder::new_with_limits(data_reader, limits)
         })
         .collect::<Vec<_>>();
 
@@ -215,7 +215,7 @@ fn test_data<'a>(data: &'a [u8]) -> Result<(), ()> {
     let info = png_readers
         .iter()
         .map(|r| r.info().clone())
-        .assert_all_items_are_same(|lhs: &png::Info, rhs: &png::Info| {
+        .assert_all_items_are_same(|lhs: &ai_png::Info, rhs: &ai_png::Info| {
             assert_same_info(lhs, rhs);
 
             // The assert below is somewhat redundant, but we use `raw_bytes`
@@ -239,7 +239,8 @@ fn test_data<'a>(data: &'a [u8]) -> Result<(), ()> {
                     None
                 };
                 retry_after_eofs(eof_controller, || {
-                    png_reader.next_frame(buffer.as_mut_slice())
+                    png_reader
+                        .next_frame(buffer.as_mut_slice())
                         .and_then(|_| png_reader.finish())
                 })
             })
@@ -253,12 +254,12 @@ fn test_data<'a>(data: &'a [u8]) -> Result<(), ()> {
 
 fn retry_after_eofs<T>(
     eof_controller: Option<&std::rc::Rc<intermittent_eofs::EofController>>,
-    mut f: impl FnMut() -> Result<T, png::DecodingError>,
-) -> Result<T, png::DecodingError> {
+    mut f: impl FnMut() -> Result<T, ai_png::DecodingError>,
+) -> Result<T, ai_png::DecodingError> {
     loop {
         let result = f();
         match result.as_ref() {
-            Err(png::DecodingError::IoError(e)) => {
+            Err(ai_png::DecodingError::IoError(e)) => {
                 if e.kind() == std::io::ErrorKind::UnexpectedEof {
                     if let Some(ctrl) = eof_controller {
                         if !ctrl.did_reach_inner_eof() {
@@ -273,7 +274,7 @@ fn retry_after_eofs<T>(
     }
 }
 
-fn assert_same_info(lhs: &png::Info, rhs: &png::Info) {
+fn assert_same_info(lhs: &ai_png::Info, rhs: &ai_png::Info) {
     // Check that all decoders report the same `IHDR` fields.
     assert_eq!(lhs.width, rhs.width);
     assert_eq!(lhs.height, rhs.height);
@@ -297,7 +298,7 @@ trait IteratorExtensionsForFuzzing: Iterator + Sized {
     /// iterator are `Err(_)`.  Passes through unmodified iterator items.
     fn assert_all_results_are_consistent<T>(self) -> impl Iterator<Item = Self::Item>
     where
-        Self: Iterator<Item = Result<T, png::DecodingError>>,
+        Self: Iterator<Item = Result<T, ai_png::DecodingError>>,
     {
         // Eagerly collect all the items - this makes sure we check consistency of *all* results,
         // even if a downstream iterator combinator consumes items lazily and never "pumps" some

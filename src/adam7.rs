@@ -329,7 +329,7 @@ fn expand_adam7_bytes(
 /// Example:
 ///
 /// ```
-/// use png::{expand_interlaced_row, Adam7Info};
+/// use ai_png::{expand_interlaced_row, Adam7Info};
 /// let info = Adam7Info::new(5, 0, 8);
 /// let mut img = vec![0; 8 * 8];
 /// let row = vec![1, 2, 3, 4];

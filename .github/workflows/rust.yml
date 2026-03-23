@@ -32,7 +32,7 @@ jobs:
   feature_check:
     strategy:
       matrix:
-        features: ["", "unstable", "benchmarks"]
+        features: ["std", "std,unstable", "std,benchmarks"]
         os: [ubuntu-latest, macos-latest] # macos-latest is ARM
     runs-on: ${{ matrix.os }}
     steps:

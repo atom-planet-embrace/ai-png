@@ -1,4 +1,4 @@
-use png::{Decoder, DecodingError};
+use ai_png::{Decoder, DecodingError};
 use std::io::Write;
 
 mod pipe {

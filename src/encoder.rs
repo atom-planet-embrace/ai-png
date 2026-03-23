@@ -1,7 +1,14 @@
-use borrow::Cow;
+use crate::io;
+use crate::io_ext::WritableCursor;
+use alloc::borrow::Cow;
+use alloc::string::String;
+#[cfg(feature = "std")]
+use alloc::string::ToString;
+use alloc::vec;
+use alloc::vec::Vec;
+use core::{error, fmt, mem, ops, result};
 use io::{Read, Write};
 use ops::{Deref, DerefMut};
-use std::{borrow, error, fmt, io, mem, ops, result};
 
 use crc32fast::Hasher as Crc32;
 use flate2::write::ZlibEncoder;
@@ -54,6 +61,7 @@ enum FormatErrorKind {
 impl error::Error for EncodingError {
     fn cause(&self) -> Option<&(dyn error::Error + 'static)> {
         match self {
+            #[cfg(feature = "std")]
             EncodingError::IoError(err) => Some(err),
             _ => None,
         }
@@ -119,8 +127,15 @@ impl From<io::Error> for EncodingError {
 }
 
 impl From<EncodingError> for io::Error {
-    fn from(err: EncodingError) -> io::Error {
-        io::Error::new(io::ErrorKind::Other, err.to_string())
+    fn from(_err: EncodingError) -> io::Error {
+        #[cfg(feature = "std")]
+        {
+            io::Error::new(io::ErrorKind::Other, _err.to_string())
+        }
+        #[cfg(not(feature = "std"))]
+        {
+            io::Error::new(io::ErrorKind::Other, "encoding error")
+        }
     }
 }
 
@@ -657,7 +672,7 @@ impl<W: Write> Writer<W> {
     /// the length of `data` can't be parsed as a `u32` though the length of the chunk data should
     /// not exceed `i32::MAX` or 2,147,483,647.
     pub fn write_chunk(&mut self, name: ChunkType, data: &[u8]) -> Result<()> {
-        use std::convert::TryFrom;
+        use core::convert::TryFrom;
 
         if u32::try_from(data.len()).map_or(true, |length| length > i32::MAX as u32) {
             let kind = FormatErrorKind::WrittenTooMuch(data.len() - i32::MAX as usize);
@@ -777,7 +792,7 @@ impl<W: Write> Writer<W> {
         let zlib_encoded = match self.options.compression {
             DeflateCompression::NoCompression => {
                 let mut compressor =
-                    fdeflate::StoredOnlyCompressor::new(std::io::Cursor::new(Vec::new()))?;
+                    fdeflate::StoredOnlyCompressor::new(WritableCursor::new(Vec::new()))?;
                 for line in data.chunks(in_len) {
                     compressor.write_data(&[0])?;
                     compressor.write_data(line)?;
@@ -785,7 +800,8 @@ impl<W: Write> Writer<W> {
                 compressor.finish()?.into_inner()
             }
             DeflateCompression::FdeflateUltraFast => {
-                let mut compressor = fdeflate::Compressor::new(std::io::Cursor::new(Vec::new()))?;
+                let mut compressor =
+                    fdeflate::Compressor::new(WritableCursor::new(Vec::new()), 1, true)?;
 
                 let mut current = vec![0; in_len + 1];
                 for line in data.chunks(in_len) {
@@ -798,14 +814,16 @@ impl<W: Write> Writer<W> {
 
                 let compressed = compressor.finish()?.into_inner();
                 if compressed.len()
-                    > fdeflate::StoredOnlyCompressor::<()>::compressed_size((in_len + 1) * height)
+                    > fdeflate::StoredOnlyCompressor::<WritableCursor>::compressed_size(
+                        (in_len + 1) * height,
+                    )
                 {
                     // Write uncompressed data since the result from fast compression would take
                     // more space than that.
                     //
                     // This is essentially a fallback to NoCompression.
                     let mut compressor =
-                        fdeflate::StoredOnlyCompressor::new(std::io::Cursor::new(Vec::new()))?;
+                        fdeflate::StoredOnlyCompressor::new(WritableCursor::new(Vec::new()))?;
                     for line in data.chunks(in_len) {
                         compressor.write_data(&[0])?;
                         compressor.write_data(line)?;
@@ -1351,7 +1369,7 @@ impl<'a, W: Write> Wrapper<'a, W> {
                 Wrapper::Flate2(ZlibEncoder::new(writer, flate2::Compression::none()))
             }
             DeflateCompression::FdeflateUltraFast => {
-                Wrapper::FDeflate(fdeflate::Compressor::new(writer)?)
+                Wrapper::FDeflate(fdeflate::Compressor::new(writer, 1, true)?)
             }
             DeflateCompression::Level(level) => Wrapper::Flate2(ZlibEncoder::new(
                 writer,
@@ -1783,10 +1801,10 @@ mod tests {
     use crate::Decoder;
 
     use io::BufReader;
+    use io::Cursor;
     use rand::{rng, Rng};
     use std::cmp;
     use std::fs::File;
-    use std::io::Cursor;
 
     #[test]
     fn roundtrip1() {

@@ -1,5 +1,5 @@
 // For reading and opening files
-use png::text_metadata::{ITXtChunk, ZTXtChunk};
+use ai_png::text_metadata::{ITXtChunk, ZTXtChunk};
 use std::env;
 use std::fs::File;
 use std::io::BufWriter;
@@ -11,9 +11,9 @@ fn main() {
     let file = File::create(path).unwrap();
     let w = &mut BufWriter::new(file);
 
-    let mut encoder = png::Encoder::new(w, 2, 1); // Width is 2 pixels and height is 1.
-    encoder.set_color(png::ColorType::Rgba);
-    encoder.set_depth(png::BitDepth::Eight);
+    let mut encoder = ai_png::Encoder::new(w, 2, 1); // Width is 2 pixels and height is 1.
+    encoder.set_color(ai_png::ColorType::Rgba);
+    encoder.set_depth(ai_png::BitDepth::Eight);
     // Adding text chunks to the header
     encoder
         .add_text_chunk(

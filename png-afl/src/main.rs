@@ -1,8 +1,8 @@
 #![forbid(unsafe_code)]
 
 #[inline(always)]
-fn png_decode(data: &[u8]) -> Result<(png::OutputInfo, Vec<u8>), ()> {
-    let decoder = png::Decoder::new(data);
+fn png_decode(data: &[u8]) -> Result<(ai_png::OutputInfo, Vec<u8>), ()> {
+    let decoder = ai_png::Decoder::new(data);
 
     let mut reader = decoder.read_info().map_err(|_| ())?;
 
