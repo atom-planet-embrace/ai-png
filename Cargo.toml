@@ -23,7 +23,7 @@ include = [
 [dependencies]
 bitflags = "2.0"
 crc32fast = { version = "1.5.0", default-features = false }
-fdeflate = { package = "ai-fdeflate", version = "0.3.7" }
+fdeflate = { package = "ai-fdeflate", version = "0.3.8" }
 flate2 = { package = "ai-flate2", version = "1.1.9" }
 no_std_io = { version = "0.6", default-features = false, features = ["alloc"] }
 miniz_oxide = { version = "0.8", default-features = false }
