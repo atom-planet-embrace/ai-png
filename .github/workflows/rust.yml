@@ -82,8 +82,8 @@ jobs:
     - run: rustup default stable
     - name: test
       run: |
-        cargo test -v --workspace --all-targets
-        cargo test -v --doc
+        cargo test -v --workspace --all-targets --features std
+        cargo test -v --doc --features std
   rustfmt:
     runs-on: ubuntu-latest
     steps:

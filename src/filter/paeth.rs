@@ -388,10 +388,13 @@ mod tests {
                 for c in 0..=255 {
                     let baseline = filter_paeth(a, b, c);
                     let fpnge = filter_paeth_fpnge(a, b, c);
-                    let stbi = filter_paeth_stbi(a as i16, b as i16, c as i16);
-
                     assert_eq!(baseline, fpnge);
-                    assert_eq!(baseline, stbi);
+
+                    #[cfg(target_arch = "x86_64")]
+                    {
+                        let stbi = filter_paeth_stbi(a as i16, b as i16, c as i16);
+                        assert_eq!(baseline, stbi);
+                    }
                 }
             }
         }

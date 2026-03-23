@@ -121,8 +121,8 @@ mod test {
         assert_eq!(
             InterlaceInfoIter::empty()
                 .map(|info| info.line_number())
-                .collect::<Vec<_>>(),
-            vec![],
+                .collect::<Vec<u32>>(),
+            Vec::<u32>::new(),
         );
     }
 }
