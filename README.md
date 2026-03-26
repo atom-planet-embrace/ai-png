@@ -1,4 +1,4 @@
-This is a fork of the [png](https://crates.io/crates/png) crate.
+This is a fork of the [png](https://crates.io/crates/png) crate. The git repository is located at https://github.com/image-rs/image-png.
 
 # PNG Decoder/Encoder
 [![Build Status](https://github.com/atom-planet-embrace/ai-png/workflows/Rust%20CI/badge.svg)](https://github.com/atom-planet-embrace/ai-image/actions)
