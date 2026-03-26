@@ -3,7 +3,7 @@ name = "ai-png"
 version = "0.18.1"
 license = "MIT OR Apache-2.0"
 
-description = "A no_std port of png"
+description = "A no_std fork of png"
 categories = ["multimedia::images"]
 authors = ["The image-rs Developers"]
 repository = "https://github.com/atom-planet-embrace/ai-png"
